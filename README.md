@@ -180,5 +180,4 @@ This project uses a synthetic dataset generated for portfolio purposes. Some met
 
 ## 👤 Author
 
-Built by Steve Lopez — Analytics Engineer portfolio project.  
-[LinkedIn](#) · [GitHub](#)
+Built by Venkat Koushik Pillala
