@@ -1,6 +1,6 @@
-# 📊 Marketing Analytics Assistant
+# Marketing Analytics Assistant / NL-to-SQL Intelligence Agent
 
-A two-tab Streamlit application that combines a natural language SQL assistant with an AI-powered marketing recommendation engine. Built as a portfolio project demonstrating the full analytics-to-action loop: query data → surface intelligence → generate recommendations → track decisions.
+An AI-powered Streamlit application that converts natural-language marketing questions into SQL queries, analyzes campaign and customer data, and generates actionable marketing recommendations. The project demonstrates an end-to-end analytics workflow: ask a business question, query structured data, surface insights, generate recommendations, and track decisions.
 
 ---
 
@@ -128,8 +128,8 @@ The SQLite database covers a full B2B marketing stack:
 
 **1. Clone the repo**
 ```bash
-git clone https://github.com/yourusername/marketing_analytics_assistant.git
-cd marketing_analytics_assistant
+git clone https://github.com/venkatkoushik22/marketing-analytics-assistant.git
+cd marketing-analytics-assistant
 ```
 
 **2. Install dependencies**
