@@ -895,3 +895,4 @@ with tab_chat:
                         st.error(err)
 
             st.session_state.chat_display.append(display_item)
+
