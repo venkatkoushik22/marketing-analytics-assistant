@@ -253,40 +253,46 @@ def fallback_sql_response(user_question: str) -> str:
     if "revenue" in q and "segment" in q:
         sql = """
 SELECT
-    customer_segment,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM orders
-WHERE strftime('%Y', order_date) = '2024'
-GROUP BY customer_segment
+    c.segment AS customer_segment,
+    ROUND(SUM(o.amount), 2) AS total_revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+WHERE strftime('%Y', o.order_date) = '2024'
+GROUP BY c.segment
 ORDER BY total_revenue DESC;
 """
     elif "roas" in q or "channel" in q:
         sql = """
 SELECT
-    channel,
-    ROUND(SUM(revenue) / NULLIF(SUM(spend), 0), 2) AS roas
-FROM campaigns
-GROUP BY channel
+    ca.channel,
+    ROUND(SUM(o.amount) / NULLIF(SUM(ca.spend), 0), 2) AS roas,
+    ROUND(SUM(o.amount), 2) AS total_revenue,
+    ROUND(SUM(ca.spend), 2) AS total_spend
+FROM campaigns ca
+JOIN orders o ON ca.campaign_id = o.campaign_id
+GROUP BY ca.channel
 ORDER BY roas DESC;
 """
     elif "leads" in q:
         sql = """
 SELECT
-    source,
+    lead_source,
     COUNT(*) AS total_leads
 FROM leads
-GROUP BY source
+GROUP BY lead_source
 ORDER BY total_leads DESC;
 """
     else:
         sql = """
 SELECT
-    campaign_name,
-    channel,
-    ROUND(spend, 2) AS spend,
-    ROUND(revenue, 2) AS revenue,
-    ROUND(revenue / NULLIF(spend, 0), 2) AS roas
-FROM campaigns
+    ca.campaign_name,
+    ca.channel,
+    ROUND(ca.spend, 2) AS spend,
+    ROUND(SUM(o.amount), 2) AS revenue,
+    ROUND(SUM(o.amount) / NULLIF(ca.spend, 0), 2) AS roas
+FROM campaigns ca
+JOIN orders o ON ca.campaign_id = o.campaign_id
+GROUP BY ca.campaign_id, ca.campaign_name, ca.channel, ca.spend
 ORDER BY revenue DESC
 LIMIT 10;
 """
