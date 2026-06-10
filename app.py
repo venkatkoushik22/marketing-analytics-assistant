@@ -847,7 +847,7 @@ with tab_chat:
                     try:
                         reply = ask_claude(st.session_state.messages)
                     except anthropic.APIConnectionError:
-                        st.info("Demo SQL mode is active. The app generated a sample analytics query for this question.")
+                        st.info("Demo mode: generated an analytics SQL query using the sample marketing database.")
                         latest_question = st.session_state.messages[-1]["content"]
                         reply = fallback_sql_response(latest_question)
                     except anthropic.AuthenticationError:
