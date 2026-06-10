@@ -39,6 +39,7 @@ marketing_analytics_assistant/
 ---
 
 ## ✨ Features
+- SQL Query Explanation: Automatically explains generated SQL in business-friendly terms, including tables used, analysis logic, and decision-making value.
 
 ### 💬 Tab 1 — Analytics Assistant
 - Ask any question about your marketing data in plain English
