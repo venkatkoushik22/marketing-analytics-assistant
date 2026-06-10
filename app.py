@@ -830,13 +830,16 @@ with tab_chat:
                         reply = ask_claude(st.session_state.messages)
                     except anthropic.APIConnectionError:
                         st.warning("Claude API connection failed, so fallback demo SQL mode is being used.")
-                        reply = fallback_sql_response(prompt)
+                        latest_question = st.session_state.messages[-1]["content"]
+                        reply = fallback_sql_response(latest_question)
                     except anthropic.AuthenticationError:
                         st.warning("Anthropic API authentication failed, so fallback demo SQL mode is being used.")
-                        reply = fallback_sql_response(prompt)
+                        latest_question = st.session_state.messages[-1]["content"]
+                        reply = fallback_sql_response(latest_question)
                     except anthropic.RateLimitError:
                         st.warning("Anthropic API rate limit reached, so fallback demo SQL mode is being used.")
-                        reply = fallback_sql_response(prompt)
+                        latest_question = st.session_state.messages[-1]["content"]
+                        reply = fallback_sql_response(latest_question)
                 except anthropic.APIConnectionError:
                     st.error(
                         "Could not connect to Anthropic API. Check Hugging Face Space internet access, ANTHROPIC_API_KEY secret, and Anthropic billing/API availability."
