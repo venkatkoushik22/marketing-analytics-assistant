@@ -1,3 +1,13 @@
+---
+title: Marketing Analytics Assistant
+emoji: 📊
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 8501
+pinned: false
+---
+
 # Marketing Analytics Assistant / NL-to-SQL Intelligence Agent
 
 An AI-powered Streamlit application that converts natural-language marketing questions into SQL queries, analyzes campaign and customer data, and generates actionable marketing recommendations. The project demonstrates an end-to-end analytics workflow: ask a business question, query structured data, surface insights, generate recommendations, and track decisions.
