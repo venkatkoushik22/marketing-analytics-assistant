@@ -246,6 +246,58 @@ def build_query_explanation(sql: str) -> str:
     )
 
 
+def fallback_sql_response(user_question: str) -> str:
+    """Fallback NL-to-SQL response when Claude API is unavailable."""
+    q = user_question.lower()
+
+    if "revenue" in q and "segment" in q:
+        sql = """
+SELECT
+    customer_segment,
+    ROUND(SUM(revenue), 2) AS total_revenue
+FROM orders
+WHERE strftime('%Y', order_date) = '2024'
+GROUP BY customer_segment
+ORDER BY total_revenue DESC;
+"""
+    elif "roas" in q or "channel" in q:
+        sql = """
+SELECT
+    channel,
+    ROUND(SUM(revenue) / NULLIF(SUM(spend), 0), 2) AS roas
+FROM campaigns
+GROUP BY channel
+ORDER BY roas DESC;
+"""
+    elif "leads" in q:
+        sql = """
+SELECT
+    source,
+    COUNT(*) AS total_leads
+FROM leads
+GROUP BY source
+ORDER BY total_leads DESC;
+"""
+    else:
+        sql = """
+SELECT
+    campaign_name,
+    channel,
+    ROUND(spend, 2) AS spend,
+    ROUND(revenue, 2) AS revenue,
+    ROUND(revenue / NULLIF(spend, 0), 2) AS roas
+FROM campaigns
+ORDER BY revenue DESC
+LIMIT 10;
+"""
+
+    return f"""I could not reach the Claude API, so I generated a fallback demo SQL query based on the question.
+
+```sql
+{sql.strip()}
+```"""
+
+
 def ask_claude(messages: list) -> str:
     """Send conversation history to Claude and get a response."""
     client = get_anthropic_client()
@@ -774,7 +826,17 @@ with tab_chat:
             with st.spinner("Thinking..."):
                 start = time.time()
                 try:
-                    reply = ask_claude(st.session_state.messages)
+                    try:
+                        reply = ask_claude(st.session_state.messages)
+                    except anthropic.APIConnectionError:
+                        st.warning("Claude API connection failed, so fallback demo SQL mode is being used.")
+                        reply = fallback_sql_response(prompt)
+                    except anthropic.AuthenticationError:
+                        st.warning("Anthropic API authentication failed, so fallback demo SQL mode is being used.")
+                        reply = fallback_sql_response(prompt)
+                    except anthropic.RateLimitError:
+                        st.warning("Anthropic API rate limit reached, so fallback demo SQL mode is being used.")
+                        reply = fallback_sql_response(prompt)
                 except anthropic.APIConnectionError:
                     st.error(
                         "Could not connect to Anthropic API. Check Hugging Face Space internet access, ANTHROPIC_API_KEY secret, and Anthropic billing/API availability."
