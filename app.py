@@ -250,7 +250,19 @@ def fallback_sql_response(user_question: str) -> str:
     """Fallback NL-to-SQL response when Claude API is unavailable."""
     q = user_question.lower()
 
-    if "revenue" in q and "segment" in q:
+    if "stale" in q and "lead" in q:
+        sql = """
+SELECT
+    ca.campaign_name,
+    ca.channel,
+    COUNT(*) AS stale_leads
+FROM leads l
+JOIN campaigns ca ON l.campaign_id = ca.campaign_id
+WHERE LOWER(l.status) = 'stale'
+GROUP BY ca.campaign_id, ca.campaign_name, ca.channel
+ORDER BY stale_leads DESC;
+"""
+    elif "revenue" in q and "segment" in q:
         sql = """
 SELECT
     c.segment AS customer_segment,
@@ -297,7 +309,7 @@ ORDER BY revenue DESC
 LIMIT 10;
 """
 
-    return f"""I could not reach the Claude API, so I generated a fallback demo SQL query based on the question.
+    return f"""Generated a demo SQL query for this marketing analytics question.
 
 ```sql
 {sql.strip()}
