@@ -372,8 +372,11 @@ with st.sidebar:
         st.rerun()
 
 # ─── MAIN UI ──────────────────────────────────────────────────────────────────
-st.title("📊 Marketing Analytics Assistant")
-st.caption("Ask questions about campaigns, leads, revenue, SEO, email, and more.")
+st.title("Marketing Analytics Assistant")
+st.caption(
+    "NL-to-SQL intelligence agent for marketing insights, campaign analysis, "
+    "and AI-generated business recommendations."
+)
 
 tab_chat, tab_recs = st.tabs(["💬 Analytics Assistant", "💡 Recommendations"])
 
