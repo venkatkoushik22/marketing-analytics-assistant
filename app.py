@@ -250,7 +250,7 @@ def ask_claude(messages: list) -> str:
     """Send conversation history to Claude and get a response."""
     client = get_anthropic_client()
     response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model="claude-3-5-haiku-latest",
         max_tokens=2000,
         system=build_system_prompt(),
         messages=messages,
@@ -773,7 +773,19 @@ with tab_chat:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 start = time.time()
-                reply = ask_claude(st.session_state.messages)
+                try:
+                    reply = ask_claude(st.session_state.messages)
+                except anthropic.APIConnectionError:
+                    st.error(
+                        "Could not connect to Anthropic API. Check Hugging Face Space internet access, ANTHROPIC_API_KEY secret, and Anthropic billing/API availability."
+                    )
+                    st.stop()
+                except anthropic.AuthenticationError:
+                    st.error("Anthropic API authentication failed. Check that ANTHROPIC_API_KEY is correct.")
+                    st.stop()
+                except anthropic.RateLimitError:
+                    st.error("Anthropic API rate limit reached. Try again later or check your Anthropic usage limits.")
+                    st.stop()
                 elapsed = time.time() - start
 
             # Add Claude reply to conversation history
