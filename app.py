@@ -192,6 +192,45 @@ def extract_sql(text: str) -> str | None:
         return match.group(0).replace("```", "").strip()
     return None
 
+
+def build_query_explanation(sql: str) -> str:
+    """Create a simple business-friendly explanation of the generated SQL."""
+    clean_sql = re.sub(r"\s+", " ", sql).strip()
+
+    table_matches = re.findall(
+        r"(?:FROM|JOIN)\s+([a-zA-Z_][\w\.]*)",
+        clean_sql,
+        flags=re.IGNORECASE,
+    )
+
+    tables = []
+    for table in table_matches:
+        short_name = table.split(".")[-1]
+        if short_name not in tables:
+            tables.append(short_name)
+
+    operations = []
+    upper_sql = clean_sql.upper()
+
+    if "GROUP BY" in upper_sql:
+        operations.append("groups results for comparison")
+    if "ORDER BY" in upper_sql:
+        operations.append("sorts the output to highlight top or bottom results")
+    if "WHERE" in upper_sql:
+        operations.append("filters the dataset before analysis")
+    if any(func in upper_sql for func in ["SUM(", "COUNT(", "AVG(", "MIN(", "MAX("]):
+        operations.append("calculates summary metrics")
+
+    table_text = ", ".join(tables) if tables else "the selected marketing tables"
+    operation_text = "; ".join(operations) if operations else "retrieves matching records"
+
+    return (
+        f"**Tables used:** {table_text}\n\n"
+        f"**Analysis logic:** This query {operation_text}.\n\n"
+        f"**Business value:** Helps translate a marketing question into a structured SQL analysis that can support campaign, revenue, funnel, or customer decision-making."
+    )
+
+
 def ask_claude(messages: list) -> str:
     """Send conversation history to Claude and get a response."""
     client = get_anthropic_client()
@@ -663,6 +702,7 @@ with tab_recs:
             )
 
 # ─── TAB 1: CHAT ──────────────────────────────────────────────────────────────
+# ─── TAB 1: CHAT ──────────────────────────────────────────────────────────────
 with tab_chat:
     # Render chat history
     for item in st.session_state.chat_display:
@@ -672,13 +712,20 @@ with tab_chat:
         else:
             with st.chat_message("assistant"):
                 st.markdown(item["content"])
+
                 if item.get("sql"):
                     with st.expander("View SQL", expanded=False):
                         st.code(item["sql"], language="sql")
+
+                    if item.get("query_explanation"):
+                        with st.expander("Query explanation", expanded=False):
+                            st.markdown(item["query_explanation"])
+
                 if item.get("dataframe") is not None:
                     df = item["dataframe"]
                     st.dataframe(df, use_container_width=True)
                     render_chart(df)
+
                 if item.get("error"):
                     st.error(item["error"])
 
@@ -728,6 +775,7 @@ with tab_chat:
                 "role": "assistant",
                 "content": display_text,
                 "sql": sql_query,
+                "query_explanation": None,
                 "dataframe": None,
                 "error": None,
             }
@@ -736,6 +784,11 @@ with tab_chat:
                 with st.expander("View SQL", expanded=True):
                     st.code(sql_query, language="sql")
 
+                query_explanation = build_query_explanation(sql_query)
+                display_item["query_explanation"] = query_explanation
+                with st.expander("Query explanation", expanded=False):
+                    st.markdown(query_explanation)
+                    
                 # Run the query
                 with st.spinner("Running query..."):
                     try:
