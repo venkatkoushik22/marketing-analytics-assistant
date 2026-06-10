@@ -14,6 +14,7 @@ import anthropic
 import sqlite3
 import time
 import re
+import os
 
 # ─── DEPLOYMENT TOGGLE ───────────────────────────────────────────────────────
 # Set to True to use Databricks (production), False to use SQLite (demo)
@@ -152,7 +153,21 @@ SYSTEM_PROMPT = build_system_prompt()
 
 # ─── HELPERS ──────────────────────────────────────────────────────────────────
 def get_anthropic_client():
-    return anthropic.Anthropic(api_key=st.secrets["anthropic"]["api_key"])
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+
+    if not api_key:
+        try:
+            api_key = st.secrets["anthropic"]["api_key"]
+        except Exception:
+            api_key = None
+
+    if not api_key:
+        st.error(
+            "Anthropic API key is missing. Add ANTHROPIC_API_KEY in Hugging Face Space secrets."
+        )
+        st.stop()
+
+    return anthropic.Anthropic(api_key=api_key)
 
 def run_query(sql: str) -> pd.DataFrame:
     """Execute SQL against Databricks or SQLite depending on USE_DATABRICKS flag."""
